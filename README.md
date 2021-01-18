@@ -12,7 +12,7 @@ const Scripts = [
   '步行街热帖.js'
 ]
 await Promise.all(Scripts.map(async js => {
-  const REQ = new Request(`https://gitee.com/ourongxing/Scriptables/raw/main/${encodeURIComponent(js)}`);
+  const REQ = new Request(`https://cdn.jsdelivr.net/gh/ourongxing/Scriptable-Widgets/${encodeURIComponent(js)}`);
   const RES = await REQ.load();
   FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), js), RES);
 }));
