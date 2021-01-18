@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: brown; icon-glyph: magic;
+// icon-color: deep-green; icon-glyph: magic;
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-gray; icon-glyph: code-branch;
@@ -752,8 +752,11 @@ const Running = async (Widget, default_args = "") => {
 class Widget extends Base {
   constructor (arg) {
     super(arg)
-    this.name = '教务在线'
-    this.desc = '实时刷新教务在线动态'
+    this.name = '知乎热榜'
+    this.desc = '实时刷新知乎热点问题'
+
+    // 注册设置
+    this.registerAction('插件设置', this.actionSetting.bind(this))
   }
 
   async render () {
@@ -770,16 +773,16 @@ class Widget extends Base {
    * 渲染小尺寸组件
    */
   async renderSmall () {
-    let res = await this.httpGet('https://we.cqu.pt/api/news/jw_list.php?page=1')
+    let res = await this.httpGet('https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=5&desktop=true')
     let data = res['data']
     let topic = data[0]
     // 显示数据
     let w = new ListWidget()
-    w = await this.renderHeader(w, 'http://www.cqupt.edu.cn/dfiles/13011/cqupt/img/favicon_128x128.ico', '教务在线')
+    w = await this.renderHeader(w, 'https://is3-ssl.mzstatic.com/image/thumb/Purple114/v4/67/6b/59/676b5937-05d2-dc0d-62e0-d787158b3b1f/source/512x512bb.jpg', '知乎热榜')
     let body = w.addStack()
-    let title = body.addText(topic['title'])
+    let title = body.addText(topic['target']['title'])
     title.font = Font.boldSystemFont(15)
-    w.url = this.actionUrl('open-url', topic['articleid'])
+    w.url = this.actionUrl('open-url', topic['target']['id'])
     w.addSpacer()
     return w
   }
@@ -787,15 +790,15 @@ class Widget extends Base {
    * 渲染中尺寸组件
    */
   async renderMedium (count = 2) {
-    let res = await this.httpGet('https://we.cqu.pt/api/news/jw_list.php?page=1')
+    let res = await this.httpGet('https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=5&desktop=true')
     let data = res['data']
     // 显示数据
     let w = new ListWidget()
-    w = await this.renderHeader(w, 'http://www.cqupt.edu.cn/dfiles/13011/cqupt/img/favicon_128x128.ico', '教务在线')
+    w = await this.renderHeader(w, 'https://is3-ssl.mzstatic.com/image/thumb/Purple114/v4/67/6b/59/676b5937-05d2-dc0d-62e0-d787158b3b1f/source/512x512bb.jpg', '知乎热榜')
 
     //       标题
     // 序号
-    //       时间
+    //       热度
     const body = w.addStack()
     const bodyLeft = body.addStack()
     bodyLeft.layoutVertically()
@@ -805,24 +808,24 @@ class Widget extends Base {
       dom.centerAlignContent()
       let number = dom.addText((i+1).toString())
       number.font = Font.boldRoundedSystemFont(30)
-      number.textColor = new Color("#6e8b30", 1)
+      number.textColor = new Color("#0084ff", 1)
 
       dom.addSpacer(10)
 
       let info = dom.addStack()
       info.layoutVertically()
-      let title = info.addText(topic['title'])
+      let title = info.addText(topic['target']['title'])
       title.lineLimit = 1
       title.font = Font.lightSystemFont(15)
 
       info.addSpacer(5)
 
-      let detail = info.addText(topic['time'])
+      let detail = info.addText(topic['detail_text'])
       detail.font = Font.lightSystemFont(11)
       detail.textColor = new Color('#959fb2', 1)
 
       bodyLeft.addSpacer(10)
-      dom.url = this.actionUrl('open-url', topic['articleid'])
+      dom.url = this.actionUrl('open-url', topic['target']['id'])
     }
     body.addSpacer()
 
@@ -837,8 +840,28 @@ class Widget extends Base {
     return await this.renderMedium(6)
   }
 
+  async actionSetting () {
+    const settings = this.getSettings()
+    const arg = settings["type"] || "1"
+    let a = new Alert()
+    a.title="打开方式"
+    a.message="点击小组件浏览点的方式"
+    a.addAction((arg==="0"?"✅ ":"")+"知乎客户端")
+    a.addAction((arg==="1"?"✅ ":"")+"自带浏览器")
+    a.addCancelAction("取消设置")
+    let i = await a.presentSheet()
+    if (i===-1) return
+    this.settings["type"] = String(i)
+    this.saveSettings()
+  }
+
   async actionOpenUrl (url) {
-      Safari.openInApp("http://jwc.cqupt.edu.cn/fileShowContent.php?id=" + url, false)
+    const settings = this.getSettings()
+    if (settings['type']==="1"){
+      Safari.openInApp('https://www.zhihu.com/question/'+ url, false)
+    } else {
+      Safari.open('zhihu://question/' + url)
+    }
   }
 
 }
