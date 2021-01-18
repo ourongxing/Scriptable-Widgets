@@ -19,18 +19,24 @@ await Promise.all(Scripts.map(async js => {
 FILE_MGR.remove(module.filename);
 ```
 ## 图片
-1. 微博热搜
+##### 1. 微博热搜
 <div><img src="./img/weibo.jpg" width="50%"></img></div>
-2. V2EX
+
+##### 2. V2EX
 <div><img src="./img/v2ex.jpg" width="50%"></img></div>
-3. B 站排行榜
+
+##### 3. B 站排行榜
 <div><img src="./img/bilibili.jpg" width="50%"></img></div>
-4. 知乎热榜
+
+##### 4. 知乎热榜
 <div><img src="./img/zhihu.jpg" width="50%"></img></div>
-5. 虎扑步行街
+
+##### 5. 虎扑步行街
 <div><img src="./img/hupu.jpg" width="50%"></img></div>
-6. 重邮教务在线
+
+##### 6. 重邮教务在线
 <div><img src="./img/jwzx.jpg" width="50%"></img></div>
+
 ## 感谢
 本仓库脚本均使用下面两个框架进行编写
 - [im3x/Scriptables](https://github.com/im3x/Scriptables)
