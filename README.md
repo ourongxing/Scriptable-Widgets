@@ -1,4 +1,5 @@
 ## 快速使用
+> 热榜组件由于其阅读属性所以仅适配大尺寸
 1. iPhone 上下载 [Scriptable](https://apps.apple.com/cn/app/scriptable/id1405459188) App（确保你的系统已更新为 iOS14+）    
 2. 复制下列代码，在 Scriptable 中新建脚本，并将其粘贴进去，运行即可一键安装你需要的脚本，你只需要修改其中的 Scripts 数组
 ```js
@@ -23,6 +24,7 @@ FILE_MGR.remove(module.filename);
 <div><img src="./img/weibo.jpg" width="50%"></img></div>
 
 ### 2. V2EX
+> 可以设置节点，目前有最新，最热，分享创造，分享发现，程序员，问与答，酷工作，二手交易等结点
 <div><img src="./img/v2ex.jpg" width="50%"></img></div>
 
 ### 3. B 站排行榜

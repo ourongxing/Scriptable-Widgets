@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: green; icon-glyph: magic;
+// icon-color: deep-green; icon-glyph: magic;
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-gray; icon-glyph: code-branch;
@@ -750,354 +750,181 @@ const Running = async (Widget, default_args = "") => {
 
 
 class Widget extends Base {
-  constructor (arg) {
-    super(arg)
-    this.logo = "https://www.v2ex.com/static/img/icon_rayps_64.png"
-    this.name = "V2EX"
-    this.desc = "创意工作者们的社区"
-    // 请求数据接口列表（收集整理中）
-    this.API = [
-      // api
-      [
-        {
-          id: 'latest',
-          name: '最新'
-        }, {
-          id: 'hot',
-          name: '最热'
-        }
-      ],
-      // tab
-      [
-        {
-          id: 'all',
-          name: '全部'
-        }, {
-          id: 'hot',
-          name: '最热'
-        }, {
-          id: 'tech',
-          name: '技术'
-        }, {
-          id: 'creative',
-          name: '创意'
-        }, {
-          id: 'playplay',
-          name: '好玩'
-        }, {
-          id: 'apple',
-          name: 'Apple'
-        }, {
-          id: 'jobs',
-          name: '酷工作'
-        }, {
-          id: 'deals',
-          name: '交易'
-        }, {
-          id: 'city',
-          name: '城市'
-        }, {
-          id: 'qna',
-          name: '问与答'
-        }
-      ],
-      // go
-      [],
-    ]
-    // 当前设置的存储key（提示：可通过桌面设置不同参数，来保存多个设置）
-    let _md5 = this.md5(module.filename)
-    this.CACHE_KEY = `cache_${_md5}`
-    // 获取设置
-    // 格式：type@name，比如 go@create、api@hot、tab@all
-    this.SETTINGS = this.settings['node'] || 'tab@all'
+  constructor(arg) {
+    super(arg);
+    this.logo = "https://www.v2ex.com/static/img/icon_rayps_64.png";
+    this.name = "V2EX";
+    this.desc = "创意工作者们的社区";
+    this.node = [
+      {
+        url: "/topics/hot.json",
+        name: "最热"
+      },
+      {
+        url: "/topics/latest.json",
+        name: "最新"
+      },
+      {
+        url: "/topics/show.json?node_name=qna",
+        name: "问与答"
+      },
+      {
+        url: "/topics/show.json?node_name=programmer",
+        name: "程序员"
+      },
+      {
+        url: "/topics/show.json?node_name=jobs",
+        name: "酷工作"
+      },
+      {
+        url: "/topics/show.json?node_name=create",
+        name: "分享创造"
+      },
+      {
+        url: "/topics/show.json?node_name=share",
+        name: "分享发现"
+      },
+      {
+        url: "/topics/show.json?node_name=all4all",
+        name: "二手交易"
+      }
+    ];
 
-    // 注册操作菜单
-    this.registerAction("节点设置", this.actionSettings)
+    // 注册设置
+    this.registerAction("插件设置", this.actionSetting.bind(this));
   }
 
-  // 渲染组件
-  async render () {
-    // 加载节点列表
-    await this._loadNodes()
-    const data = await this.getData()
-    console.log(data)
-    if (this.widgetFamily === 'medium') {
-      return await this.renderMedium(data)
-    } else if (this.widgetFamily === 'large') {
-      return await this.renderLarge(data)
+  async render() {
+    if (this.widgetFamily === "medium") {
+      return await this.renderMedium();
+    } else if (this.widgetFamily === "large") {
+      return await this.renderLarge();
     } else {
-      return await this.renderSmall(data)
+      return await this.renderSmall();
     }
   }
-  async renderSmall (data) {
-    let w = new ListWidget()
-    let topic = data[0]
-    w.url = this.actionUrl('open-url', topic['url'])
-    w = await this.renderHeader(w, this.logo, this.name + ' / ' + this.SETTINGS.split('@')[0], Color.white())
-    let content = w.addText(topic['title'])
-    content.font = Font.lightSystemFont(16)
-    content.textColor = Color.white()
-    content.lineLimit = 3
 
-    w.backgroundImage = await this.shadowImage(await this.getImageByUrl(topic['member']['avatar_large'].replace('mini', 'large')))
-
-    w.addSpacer()
-    let footer = w.addText(`@${topic['member']['username']} / ${topic['node']['title']}`)
-    footer.font = Font.lightSystemFont(10)
-    footer.textColor = Color.white()
-    footer.textOpacity = 0.5
-    footer.lineLimit = 1
-    return w
+  /**
+   * 渲染小尺寸组件
+   */
+  async renderSmall() {
+    let res = await this.httpGet(
+      "https://www.v2ex.com/api" + this.node[this.settings["num"]].url
+    );
+    let topic = res[0];
+    // 显示数据
+    let w = new ListWidget();
+    w = await this.renderHeader(
+      w,
+      "https://www.v2ex.com/static/img/icon_rayps_64.png",
+      "V2EX / " + this.node[this.settings["num"]].name
+    );
+    let body = w.addStack();
+    let title = body.addText(topic["title"]);
+    title.font = Font.boldSystemFont(15);
+    w.url = this.actionUrl("open-url", topic["url"]);
+    w.addSpacer();
+    return w;
   }
-  // 中尺寸组件
-  async renderMedium (data) {
-    let w = new ListWidget()
-    w.addSpacer(10)
-    // 设置名称
-    let tmp = this.SETTINGS.split('@')
-    let tid = tmp[0] === 'api' ? 0 : (tmp[0] === 'tab' ? 1 : 2)
-    let current = ''
-    this.API[tid].map(a => {
-      if (a['id'] === tmp[1]) current = a['name']
-    })
-    w = await this.renderHeader(w, this.logo, this.name + ' / ' + current)
-    
-    let body = w.addStack()
-    let bodyleft= body.addStack()
-    bodyleft.layoutVertically()
-    for (let i = 0; i < 2; i ++) {
-      bodyleft = await this.renderCell(bodyleft, data[i])
-      bodyleft.addSpacer(5)
+  /**
+   * 渲染中尺寸组件
+   */
+  async renderMedium(count = 2) {
+    let res = await this.httpGet(
+      "https://www.v2ex.com/api" + this.node[this.settings["num"]].url
+    );
+    // 显示数据
+    let w = new ListWidget();
+    w = await this.renderHeader(
+      w,
+      "https://www.v2ex.com/static/img/icon_rayps_64.png",
+      "V2EX / " + this.node[this.settings["num"]].name
+    );
+    function compare(p) {
+      //这是比较函数
+      return function(m, n) {
+        var a = m[p];
+        var b = n[p];
+        return b - a; //升序
+      };
     }
-    body.addSpacer()
-
-    return w
-  }
-  // 大尺寸组件
-  async renderLarge (data) {
-    let w = new ListWidget()
-    w.addSpacer(10)
-    // 设置名称
-    let tmp = this.SETTINGS.split('@')
-    let tid = tmp[0] === 'api' ? 0 : (tmp[0] === 'tab' ? 1 : 2)
-    let current = ''
-    this.API[tid].map(a => {
-      if (a['id'] === tmp[1]) current = a['name']
-    })
-    w = await this.renderHeader(w, this.logo, this.name + ' / ' + current)
-    
-      
-    let body = w.addStack()
-    let bodyleft= body.addStack()
-    bodyleft.layoutVertically()
-    for (let i = 0; i < 6; i ++) {
-      bodyleft = await this.renderCell(bodyleft, data[i], i)
-      bodyleft.addSpacer(10)
+    if (this.settings["num"] != "0" || this.settings["num"] != "1") {
+      res.sort(compare("replies"));
     }
-    body.addSpacer()
-
-    return w
-  }
 
     //       标题
     // 序号
-    //       作者
-  async renderCell (widget, topic, num) {
-    let body = widget.addStack()
-    body.url = this.actionUrl('open-url', topic['url'])
+    //       节点
+    const body = w.addStack();
+    const bodyLeft = body.addStack();
+    bodyLeft.layoutVertically();
+    for (let i = 0; i < count; i++) {
+      let topic = res[i];
+      let dom = bodyLeft.addStack();
+      dom.centerAlignContent();
+      let number = dom.addText((i + 1).toString());
+      number.font = Font.boldRoundedSystemFont(30);
+      number.textColor = new Color("#333344", 1);
 
-    let left = body.addStack()
-    let number = left.addText((num+1).toString())
-    number.font = Font.boldRoundedSystemFont(30)
-    number.textColor = new Color("#333344", 1)
+      dom.addSpacer(10);
 
-    body.addSpacer(10)
+      let info = dom.addStack();
+      info.layoutVertically();
 
-    let right = body.addStack()
-    right.layoutVertically()
-    let content = right.addText(topic['title'])
-    content.font = Font.lightSystemFont(15)
-    content.lineLimit = 1
+      let title = info.addText(topic["title"]);
+      title.lineLimit = 1;
+      title.font = Font.lightSystemFont(15);
 
-    right.addSpacer(5)
+      info.addSpacer(5);
 
-    let info = right.addText(`@${topic['member']['username']} / ${topic['node']['title']}`)
-    info.font = Font.lightSystemFont(11)
-    info.textColor = new Color('#959fb2', 1)
-    info.lineLimit = 1
+      let detail = info.addStack();
+      detail.layoutHorizontally();
+      detail.centerAlignContent();
 
-    return widget
-  }
-
-  async getData () {
-    // 解析设置，判断类型，获取对应数据
-    const tmp = this.SETTINGS.split('@')
-    switch (tmp[0]) {
-      case 'tab':
-        return await this.getDataForTab(tmp[1])
-      case 'go':
-        return await this.getDataForGo(tmp[1])
-      case 'api':
-        return await this.getDataForApi(tmp[1])
-    }
-  }
-
-  /**
-   * 获取首页tab数据
-   * @param {string} tab tab首页名称
-   */
-  async getDataForTab (tab = 'all') {
-    let url = `https://www.v2ex.com/?tab=${tab}`
-    let html = await this.fetchAPI(url, false)
-
-    // 解析html
-    let tmp = html.split(`<div id="Wrapper">`)[1].split(`<div class="inner" style="text-align: right;">`)[0]
-    let arr = tmp.split('<div class="cell item">')
-    arr.shift()
-
-    let datas = []
-    for (let i = 0; i < arr.length; i ++) {
-      let t = arr[i]
-      let title = t.split(`class="topic-link">`)[1].split('</a')[0]
-      let avatar = t.split(`<img src="`)[1].split('"')[0]
-      let node = t.split(`<a class="node"`)[1].split('</a>')[0].split('>')[1]
-      let user = t.split(`<a class="node" href="`)[1].split('</strong>')[0].split('<strong>')[1].split('>')[1].split('</')[0]
-      let link = t.split(`<span class="item_title">`)[1].split('class="')[0].split('"')[1]
-      datas.push({
-        title,
-        url: `https://www.v2ex.com${link}`,
-        member: {
-          username: user,
-          'avatar_large': avatar
-        },
-        node: {
-          title: node
-        }
-      })
-    }
-
-    return datas
-  }
-
-  async getDataForApi (api) {
-    return await this.httpGet(`https://www.v2ex.com/api/topics/${api}.json`)
-  }
-
-  /**
-   * 加载数据
-   * 节点列表
-   */
-  async getDataForGo (arg = 'create') {
-    let url = `https://www.v2ex.com/go/${arg}`
-    let html = await this.fetchAPI(url, false)
-
-    // 解析html
-    let tmp = html.split(`<div id="Wrapper">`)[1].split(`<div class="sidebar_units">`)[0]
-    let arr = tmp.split(`<table cellpadding="0" cellspacing="0" border="0" width="100%">`)
-
-    let node_title = html.split('<title>')[1].split('</')[0]
-    arr.shift()
-    arr.pop()
-
-    let datas = []
-    for (let i = 0; i < arr.length; i ++) {
-      let t = arr[i]
-      let title = t.split(`class="topic-link">`)[1].split('</a')[0]
-      let avatar = t.split(`<img src="`)[1].split('"')[0]
-      let user = t.split(`class="small fade"><strong>`)[1].split('</')[0]
-      let link = t.split(`<span class="item_title"><a href="`)[1].split('"')[0]
-      datas.push({
-        title,
-        url: `https://www.v2ex.com${link}`,
-        member: {
-          username: user,
-          'avatar_large': avatar
-        },
-        node: {
-          title: node_title
-        }
-      })
-    }
-
-    return datas
-  }
-
-  // http.get
-  async fetchAPI (api, json = true) {
-    let data = null
-    try {
-      let req = new Request(api)
-      req.headers = {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/85.0.4183.102'
-      }
-      data = await (json ? req.loadJSON() : req.loadString())
-    } catch (e) {}
-    // 判断数据是否为空（加载失败）
-    if (!data) {
-      // 判断是否有缓存
-      if (Keychain.contains(this.CACHE_KEY)) {
-        let cache = Keychain.get(this.CACHE_KEY)
-        return json ? JSON.parse(cache) : cache
+      let text = "";
+      if (this.settings["num"] != "0" || this.settings["num"] != "1") {
+        text = topic["member"]["username"];
       } else {
-        // 刷新
-        return null
+        text = topic["node"]["title"];
       }
+      let play = detail.addText(text);
+      play.font = Font.lightSystemFont(11);
+      play.textColor = new Color("#959fb2", 1);
+      play.rightAlignText();
+
+      bodyLeft.addSpacer(10);
+      dom.url = this.actionUrl("open-url", topic["url"]);
     }
-    // 存储缓存
-    Keychain.set(this.CACHE_KEY, json ? JSON.stringify(data) : data)
-    return data
+    body.addSpacer();
+    w.url = this.actionUrl("setting");
+    return w;
+  }
+  /**
+   * 渲染大尺寸组件
+   */
+  async renderLarge() {
+    return await this.renderMedium(6);
   }
 
-  // 加载节点列表
-  async _loadNodes () {
-    let s2 = await this.httpGet("https://www.v2ex.com/api/nodes/s2.json")
-    // 排序，通过topic
-    let nodes = s2.sort((a,b) => b['topics']-a['topics'])
-    this.API[2] = nodes.map(n => ({
-      id: n['id'],
-      name: n['text'],
-      topic: n['topic']
-    }))
-    return this.API[2]
-  }
-  async actionOpenUrl (url) {
-    Safari.openInApp(url, false)
-  }
-
-  async actionSettings () {
-    const tmp = this.SETTINGS.split('@')
-    const a = new Alert()
-    a.title = "内容设置"
-    a.message = "设置组件展示的内容来自哪里"
-    a.addAction((tmp[0]==='api'?'✅ ':'')+"API接口")
-    a.addAction((tmp[0]==='tab'?'✅ ':'')+"首页目录")
-    a.addAction((tmp[0]==='go'?'✅ ':'')+"指定节点")
-    a.addCancelAction("取消设置")
-    const i = await a.presentSheet()
-    if (i === -1) return
-    const table = new UITable()
-    // 如果是节点，则先远程获取
-    if (i === 2 && this.API[2].length === 0) {
-      await this._loadNodes()
-    }
-    this.API[i].map(t => {
-      const r = new UITableRow()
-      r.addText((tmp[1]===t.id?'✅ ':'')+t['name'])
-      r.onSelect = (n) => {
-        // 保存设置
-        let _t = 'api';
-        _t = i === 1 ? 'tab' : _t;
-        _t = i === 2 ? 'go' : _t;
-        let v = `${_t}@${t['id']}`
-        this.SETTINGS = v
-        this.settings['node'] = v
-        this.saveSettings()
-      }
-      table.addRow(r)
-    })
-    table.present(false)
+  async actionSetting() {
+    const settings = this.getSettings();
+    const arg = settings["num"] || "0";
+    let a = new Alert();
+    a.title = "设置结点";
+    a.message = "设置想要展示的结点";
+    this.node.forEach((item, index) => {
+      a.addAction((arg === index.toString() ? "✅ " : "") + item.name);
+    });
+    a.addCancelAction("取消设置");
+    let i = await a.presentSheet();
+    if (i === -1) return;
+    this.settings["num"] = String(i);
+    this.saveSettings();
   }
 
+  async actionOpenUrl(url) {
+    Safari.openInApp(url, false);
+  }
 }
 
 await Running(Widget)
