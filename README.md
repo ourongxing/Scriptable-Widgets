@@ -7,7 +7,7 @@ const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iC
 const Scripts = [
   '知乎热榜.js',
   '微博热搜.js',
-  'B 站排行榜.js',
+  'B站排行榜.js',
   'V2EX.js',
   '步行街热帖.js'
 ]
@@ -18,23 +18,25 @@ await Promise.all(Scripts.map(async js => {
 }));
 FILE_MGR.remove(module.filename);
 ```
-## 图片
-##### 1. 微博热搜
+### 1. 微博热搜
+> 去除 zzzq 和广告，可以设置点击链接后打开的客户端，支持微博和国际版微博。
 <div><img src="./img/weibo.jpg" width="50%"></img></div>
 
-##### 2. V2EX
+### 2. V2EX
 <div><img src="./img/v2ex.jpg" width="50%"></img></div>
 
-##### 3. B 站排行榜
+### 3. B 站排行榜
+> 可以设置分区，包括数码区，知识区，舞蹈区，鬼畜区，生活区，点击后打开哔哩哔哩 APP
 <div><img src="./img/bilibili.jpg" width="50%"></img></div>
 
-##### 4. 知乎热榜
+### 4. 知乎热榜
 <div><img src="./img/zhihu.jpg" width="50%"></img></div>
 
-##### 5. 虎扑步行街
+### 5. 虎扑步行街
 <div><img src="./img/hupu.jpg" width="50%"></img></div>
 
-##### 6. 重邮教务在线
+### 6. 重邮教务在线
+> 仅限重邮学生使用
 <div><img src="./img/jwzx.jpg" width="50%"></img></div>
 
 ## 感谢

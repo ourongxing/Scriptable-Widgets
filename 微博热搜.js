@@ -726,7 +726,7 @@ const Running = async (Widget, default_args = "") => {
       const alert = new Alert()
       alert.title = M.name
       alert.message = M.desc
-      // alert.addAction("反馈交流")
+      alert.addAction("反馈交流")
       for (let _ in actions) {
         alert.addAction(_)
         _actions.push(actions[_])
@@ -778,7 +778,6 @@ class Widget extends Base {
     // 去除第一条
     data.shift()
     let topic = data[0]
-    console.log(topic)
     // 显示数据
     let w = new ListWidget()
     w = await this.renderHeader(w, 'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=2225458401,2104443747&fm=26&gp=0.jpg', '微博热搜')
@@ -825,6 +824,10 @@ class Widget extends Base {
     bodyLeft.layoutVertically()
     for (let i = 0; i < count; i ++) {
       let topic = data[i]
+      if (topic['icon'] && topic['icon'].indexOf("jian") != -1) {
+        count = count+1;
+        continue;
+      }
       let dom = bodyLeft.addStack()
       dom.centerAlignContent()
       let number = dom.addText((i+1).toString())
